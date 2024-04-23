@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Todo List</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="nav">
+        <h1>To-Do App</h1>
+    </div>
+    
+<section class="body1">
+    <div class="container">
+    <form id="todo-form">
+        <input type="text" id="todo-input" placeholder="Enter your todo">
+        <button type="submit">Add</button>
+    </form>
+    <ul id="todo-list"></ul>
+</div>
+</section>
+
+<script>
+    const form = document.getElementById('todo-form');
+    const input = document.getElementById('todo-input');
+    const todoList = document.getElementById('todo-list');
+
+    form.addEventListener('submit', function(event) {
+        event.preventDefault();
+        const todoText = input.value.trim();
+        if (todoText !== '') {
+            fetch('http://127.0.0.1:3000/api/todos', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ text: todoText })
+            }).then(response => response.json())
+              .then(todo => {
+                  const li = document.createElement('li');
+                  li.innerHTML = `
+                      <span>${todo.text}</span>
+                      <button class="delete-btn" data-id="${todo._id}">Delete</button>
+                  `;
+                  todoList.appendChild(li);
+                  input.value = '';
+              });
+        }
+    });
+
+    todoList.addEventListener('click', function(event) {
+        if (event.target.classList.contains('delete-btn')) {
+            const id = event.target.getAttribute('data-id');
+            console.log(event.target);
+            fetch(`http://127.0.0.1:3000/api/todos/${id}`, {
+                method: 'DELETE'
+            }).then(() => {
+                // console.log(event.target.getAttribute("data-id"));
+                event.target.parentNode.remove();
+            });
+        }
+    });
+
+    window.addEventListener('load',async function() {
+        await fetch('http://127.0.0.1:3000/api/todos')
+            .then(response => response.json())
+            .then(todos => {
+                todos.forEach(todo => {
+                    const li = document.createElement('li');
+                    li.innerHTML = `
+                        <span>${todo.text}</span>
+                        <button class="delete-btn" data-id="${todo._id}">Delete</button>
+                    `;
+                    todoList.appendChild(li);
+                });
+            });
+    });
+</script>
+</body>
+</html>
